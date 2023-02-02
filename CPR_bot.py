@@ -160,3 +160,7 @@ def main(yesterday):
             print(f"This {group['group']} don't have CPR!\n")
     
 main(yesterday)
+
+
+
+# stephen notes
