@@ -16,11 +16,14 @@ from googleapiclient.errors import HttpError
 from datetime import date, timedelta
 
 
+
 yesterday = date.today() - timedelta(1)
 
 
-def main(yesterday):
-    checking = input("Do you want to check yesterday CPR(Y/N)?")
+
+def main():
+    global yesterday
+    checking = input("Do you want to check yesterday CPR(Y/N): ")
     if checking.lower() == "y":
 
     # input request
@@ -38,6 +41,7 @@ def main(yesterday):
 
     groups = []
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+
 
 
     
@@ -151,7 +155,7 @@ def main(yesterday):
                 print(f"{group['group']} is at lesson {group['nextLesson']} and the CPR is FILL and the average score of {lessons[group['nextLesson']]}\n")
             
             elif lessons[group["nextLesson"]] == '#DIV/0!' and group['Pecentage'] == "0%":
-                print(f"{group['group']} no student attend!\n")
+                print(f"{group['group']} no student attend the lessons!\n")
             
             else:
                 print(f"{group['group']} is at lesson {group['nextLesson']} and the CPR is NOT FILL\n---> Here is the CPR: {group['CPR Link']} \n")
@@ -159,4 +163,4 @@ def main(yesterday):
         except HttpError as err:
             print(f"This {group['group']} don't have CPR!\n")
     
-main(yesterday)
+main()
