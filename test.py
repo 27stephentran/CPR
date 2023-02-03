@@ -21,32 +21,25 @@ yesterday = date.today() - timedelta(1)
 
 
 
-def main():
-    global yesterday
+def main():  # sourcery skip: avoid-builtin-shadow, low-code-quality
+    new_func()
     checking = input("Do you want to check yesterday CPR(Y/N): ")
     if checking.lower() == "y":
 
     # input request
-    
+
         date = yesterday.strftime("%Y-%m-%d")
-        base = input("Enter the Campus need to check: ")
     else:
         date = input("Enter the date need checking(yyyy-mm-dd): ")
-        base = input("Enter the Campus need to check: ")
-
-
-    # variable, constant and other declaire
-    DOMAINS = 'https://lms.logika.asia/group/default/schedule'
-
-
+    base = input("Enter the Campus need to check: ")
     groups = []
     SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 
 
-    
+
     s = requests.Session()
-    
+
 
 
     para = f'?GroupWithLessonSearch%5BnextLessonTime%5D={date}+-+{date}&GroupWithLessonSearch%5BnextLessonNumber%5D=&GroupWithLessonSearch%5BnextLessonTitle%5D=&GroupWithLessonSearch%5Bid%5D=&GroupWithLessonSearch%5Btitle%5D={base}&GroupWithLessonSearch%5Bvenue%5D=&GroupWithLessonSearch%5Bactive_student_count%5D=&GroupWithLessonSearch%5Bweekday%5D=&GroupWithLessonSearch%5BlessonTeacherName%5D=&GroupWithLessonSearch%5Bteacher%5D=&GroupWithLessonSearch%5Bcurator%5D=&GroupWithLessonSearch%5Btype%5D=&GroupWithLessonSearch%5Bstatus%5D=&GroupWithLessonSearch%5BlessonFormat%5D=&GroupWithLessonSearch%5Bis_online%5D=&export=true&name=default&exportType=html'
@@ -69,7 +62,7 @@ def main():
 
 
 
-    end_point = DOMAINS + para
+    end_point = f'https://lms.logika.asia/group/default/schedule{para}'
     res = s.get(end_point, headers = header)
     output = str(res.content)
     start = output.find('<table>')
@@ -77,7 +70,7 @@ def main():
     all_classes = output[start:end+len('</table>')]
     soup = BeautifulSoup(all_classes, 'html.parser')
 
-    
+
 
 
 
@@ -93,8 +86,8 @@ def main():
         group_title = all_td[4].find('a')
         all_li = all_td[4].find('p')
         class_occurrences = all_td[6].find('span')
-        
-        if group_title == None:
+
+        if group_title is None:
             continue
 
 
@@ -108,9 +101,9 @@ def main():
             })
         groups.append(group_details)
     # get CPR 
-    
+
     if os.path.exists('token.json'):
-            creds = Credentials.from_authorized_user_file('token.json', SCOPES) 
+            creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
@@ -127,7 +120,7 @@ def main():
         lessons = []
         id = group["CPR Link"]
         start = id.find("d/")
-        end = id.find("/edit")    
+        end = id.find("/edit")
         id = id[start+2:end]
         try:
             service = build('sheets', 'v4', credentials=creds)
@@ -137,30 +130,28 @@ def main():
             result = sheet.values().get(spreadsheetId=id,
                                         range='Report!AC2:AC34').execute()
             values = result.get('values', [])
-            for j in values:
-                lessons.append(j[0]) 
-            if len(lessons) == 0:
+            lessons.extend(j[0] for j in values)
+            if not lessons:
                 result = sheet.values().get(spreadsheetId=id,
                                         range='Report!AE2:AE34').execute()
                 values = result.get('values', [])
 
-                for j in values:
-                    lessons.append(j[0]) 
-            
-            
-            
+                lessons.extend(j[0] for j in values)
     # Print result
             if lessons[group["nextLesson"]] != '#DIV/0!' and group['Pecentage'] != "0%":
-                
+
                 print(f"{group['group']} is at lesson {group['nextLesson']} and the CPR is FILL and the average score of {lessons[group['nextLesson']]}\n")
-            
+
             elif lessons[group["nextLesson"]] == '#DIV/0!' and group['Pecentage'] == "0%":
                 print(f"{group['group']} no student attend the lessons!\n")
-            
+
             else:
                 print(f"{group['group']} is at lesson {group['nextLesson']} and the CPR is NOT FILL\n---> Here is the CPR: {group['CPR Link']} \n")
-            
+
         except HttpError as err:
             print(f"This {group['group']} don't have CPR!\n")
+
+def new_func():
+    global yesterday
     
 main()
